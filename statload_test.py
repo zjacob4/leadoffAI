@@ -1,20 +1,12 @@
 import statsapi
 import pandas as pd
 
-print(statsapi.player_stats(next(x['id'] for x in statsapi.get('sports_players',{'season':2008,'gameType':'W'})['people'] if x['fullName']=='Chase Utley'), 'hitting', 'career'))
-
-players = [
-    'Chase Utley', 'Derek Jeter', 'Albert Pujols', 'Miguel Cabrera', 'David Ortiz',
-    'Ichiro Suzuki', 'Mike Trout', 'Clayton Kershaw', 'Max Scherzer', 'Justin Verlander',
-    'Mookie Betts', 'Bryce Harper', 'Nolan Arenado', 'Freddie Freeman', 'Paul Goldschmidt',
-    'Jose Altuve', 'Francisco Lindor', 'Manny Machado', 'Aaron Judge', 'Shohei Ohtani',
-    'Jacob deGrom', 'Gerrit Cole', 'Corey Seager', 'Trea Turner', 'Ronald Acuña Jr.',
-    'Juan Soto', 'Fernando Tatis Jr.', 'Vladimir Guerrero Jr.', 'Rafael Devers', 'Yadier Molina',
-    'Buster Posey', 'Joey Votto', 'Adrian Beltre', 'Robinson Cano', 'Andrew McCutchen',
-    'Chris Sale', 'Zack Greinke', 'Stephen Strasburg', 'Anthony Rizzo', 'Kris Bryant',
-    'J.D. Martinez', 'George Springer', 'Jose Ramirez', 'Matt Chapman', 'Tim Anderson',
-    'Xander Bogaerts', 'Carlos Correa', 'Alex Bregman', 'Christian Yelich', 'Cody Bellinger'
-]
+players = []
+try:
+    all_players = statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people']
+    players = [player['fullName'] for player in all_players[:1000]]
+except Exception as e:
+    print(f"Error retrieving player list: {e}")
 
 data = {
     'player': ['Chase "Silver Fox" Utley, 2B (2003-2018)'],
@@ -53,17 +45,17 @@ data = {
 }
 
 df = pd.DataFrame(data)
+counter = 0
 
 for player in players:
     try:
+        counter += 1
         player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people'] if x['fullName'] == player)
         stats = statsapi.player_stats(player_id, 'hitting', 'career')
-        print(f"Stats for {player}: {stats}")
         stats_dict = {'player': player}
-        print("line 63: ", stats)
         stats = {stat.split(': ')[0]: stat.split(': ')[1] for stat in stats.split('\n') if ': ' in stat}
         stats_dict.update(stats)
-        print("line 64")
+        print("Player ", counter, " out of 1000")
         df = pd.concat([df, pd.DataFrame([stats_dict])], ignore_index=True)
     except StopIteration:
         print(f"Player {player} not found in the 2022 season.")
