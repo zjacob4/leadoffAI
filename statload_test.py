@@ -72,5 +72,7 @@ for player in players:
 
 
 print(df.head())
+df.fillna(0, inplace=True)
+df.replace(['---', '-.--','.---'], 0, inplace=True)
 
 df.to_csv('/Users/zach/Projects/leadoffAI/statload_test.csv', index=False)
