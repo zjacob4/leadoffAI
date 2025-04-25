@@ -43,7 +43,7 @@ def train_and_evaluate(X_train, X_test, y_train, y_test):
     print(f"Mean Squared Error on Test Data: {mse}")
 
     # Save the model
-    model.save('player_ops_model.h5')
+    model.save('player_ops_model_seasonal.h5')
 
     return model
 
