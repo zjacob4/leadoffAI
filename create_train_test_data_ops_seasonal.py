@@ -12,7 +12,7 @@ def get_player_training_data_ops():
     players = []
     try:
         all_players = statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people']
-        players = [player['fullName'] for player in all_players[:100]]
+        players = [player['fullName'] for player in all_players[:1000]]
     except Exception as e:
         print(f"Error retrieving player list: {e}")
 
