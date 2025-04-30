@@ -1,0 +1,68 @@
+{% extends "base.html" %} {% block content %}
+<main class="main-container">
+  <header class="header">
+    <h1 class="title">Player Stats Explorer</h1>
+    <div class="search-container">
+      <form method="get" class="search-form">
+        {{ form.search_query }}
+        <button type="submit" class="search-button">Search</button>
+      </form>
+    </div>
+
+    {% if error %}
+    <p class="error-message">{{ error }}</p>
+    {% endif %} {% if selected_player %}
+    <p class="selected-player">
+      Showing stats for <strong>{{ selected_player }}</strong>
+    </p>
+    {% endif %}
+  </header>
+
+  <section class="stats-grid">
+    <article class="stats-card">
+      <h2 class="stats-card-title">2024 Predicted Stats</h2>
+      <div class="stats-items-grid">
+        {% for key, value in predicted_stats.items %}
+        <div class="stat-item">
+          <p class="stat-value">{{ value|floatformat:1 }}</p>
+          <p class="stat-label">{{ key }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="stats-card">
+      <h2 class="stats-card-title">Historical Performance</h2>
+      <div class="table-container">
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th class="text-left">Year</th>
+              <th class="text-right">Points</th>
+              <th class="text-right">Assists</th>
+              <th class="text-right">Rebounds</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in historical_stats %}
+            <tr>
+              <td>{{ stat.year }}</td>
+              <td class="text-right">{{ stat.points|floatformat:1 }}</td>
+              <td class="text-right">{{ stat.assists|floatformat:1 }}</td>
+              <td class="text-right">{{ stat.rebounds|floatformat:1 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</main>
+{% endblock %} {% block extra_js %}
+<script>
+  // Optional JavaScript for enhancing the UI
+  document.addEventListener("DOMContentLoaded", function () {
+    // You could add client-side validation or other enhancements here
+  });
+</script>
+{% endblock %}

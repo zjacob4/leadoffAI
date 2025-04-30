@@ -1,0 +1,162 @@
+[
+    {
+      "model": "player_stats.player",
+      "pk": 1,
+      "fields": {
+        "name": "LeBron James"
+      }
+    },
+    {
+      "model": "player_stats.player",
+      "pk": 2,
+      "fields": {
+        "name": "Stephen Curry"
+      }
+    },
+    {
+      "model": "player_stats.player",
+      "pk": 3,
+      "fields": {
+        "name": "Kevin Durant"
+      }
+    },
+    {
+      "model": "player_stats.predictedstats",
+      "pk": 1,
+      "fields": {
+        "player": 1,
+        "points": 25.4,
+        "assists": 6.2,
+        "rebounds": 7.9,
+        "steals": 1.1,
+        "blocks": 0.6,
+        "year": "2024"
+      }
+    },
+    {
+      "model": "player_stats.predictedstats",
+      "pk": 2,
+      "fields": {
+        "player": 2,
+        "points": 28.7,
+        "assists": 5.8,
+        "rebounds": 4.5,
+        "steals": 1.3,
+        "blocks": 0.2,
+        "year": "2024"
+      }
+    },
+    {
+      "model": "player_stats.predictedstats",
+      "pk": 3,
+      "fields": {
+        "player": 3,
+        "points": 27.3,
+        "assists": 4.9,
+        "rebounds": 6.8,
+        "steals": 0.9,
+        "blocks": 1.2,
+        "year": "2024"
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 1,
+      "fields": {
+        "player": 1,
+        "year": "2023",
+        "points": 24.5,
+        "assists": 6.8,
+        "rebounds": 7.5
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 2,
+      "fields": {
+        "player": 1,
+        "year": "2022",
+        "points": 25.7,
+        "assists": 7.4,
+        "rebounds": 8.1
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 3,
+      "fields": {
+        "player": 1,
+        "year": "2021",
+        "points": 26.2,
+        "assists": 7.8,
+        "rebounds": 8.0
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 4,
+      "fields": {
+        "player": 2,
+        "year": "2023",
+        "points": 29.4,
+        "assists": 6.1,
+        "rebounds": 5.2
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 5,
+      "fields": {
+        "player": 2,
+        "year": "2022",
+        "points": 28.7,
+        "assists": 5.9,
+        "rebounds": 5.0
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 6,
+      "fields": {
+        "player": 2,
+        "year": "2021",
+        "points": 30.1,
+        "assists": 6.3,
+        "rebounds": 5.5
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 7,
+      "fields": {
+        "player": 3,
+        "year": "2023",
+        "points": 26.8,
+        "assists": 5.0,
+        "rebounds": 6.5
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 8,
+      "fields": {
+        "player": 3,
+        "year": "2022",
+        "points": 27.5,
+        "assists": 5.3,
+        "rebounds": 6.8
+      }
+    },
+    {
+      "model": "player_stats.historicalstats",
+      "pk": 9,
+      "fields": {
+        "player": 3,
+        "year": "2021",
+        "points": 28.2,
+        "assists": 5.6,
+        "rebounds": 7.1
+      }
+    }
+  ]
+  
