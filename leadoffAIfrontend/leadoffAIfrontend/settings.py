@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',  # Django extensions for additional features
     'player_stats',  # Our player stats app
 ]
 

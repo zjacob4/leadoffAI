@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Q
 import random
+import hashlib
 
 from .models import Player, PredictedStats, HistoricalStats
 from .forms import PlayerSearchForm
@@ -15,6 +16,7 @@ def player_stats_explorer(request):
 
     if form.is_valid() and 'search_query' in request.GET and request.GET.get('search_query'):
         search_query = form.cleaned_data['search_query']
+        print(f"Search query: {search_query}")
 
         # Try to find the player in the database
         try:
@@ -38,7 +40,15 @@ def player_stats_explorer(request):
                     }
 
                 # Get historical stats
-                player_historical_stats = player.historical_stats.all()
+                # Convert player name to numeric ID
+                # Use a hash function to generate a numeric representation
+                hash_object = hashlib.md5(player.encode())  # MD5 hash
+                hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
+                player_id = hash_value % 1e6  # Reduce the size of the number to avoid overflow
+
+                player_historical_stats = player_id.historical_stats.all()
+                print("Player historical stats:", player_historical_stats)
+
                 if player_historical_stats:
                     historical_stats = player_historical_stats
                 else:
@@ -98,30 +108,29 @@ def player_stats_explorer(request):
     else:
         # Default data for initial page load
         predicted_stats = {
-            'points': 25.4,
-            'assists': 6.2,
-            'rebounds': 5.1,
-            'steals': 1.3,
-            'blocks': 0.8,
+            'OPS': 25.4,
+            'K': 6.2,
+            'AB': 5.1,
         }
+        
         historical_stats = [
             {
                 'year': '2023',
-                'points': 24.1,
-                'assists': 5.8,
-                'rebounds': 4.9,
+                'OPS': 24.1,
+                'K': 5.8,
+                'AB': 4.9,
             },
             {
                 'year': '2022',
-                'points': 22.3,
-                'assists': 5.2,
-                'rebounds': 4.5,
+                'OPS': 22.3,
+                'K': 5.2,
+                'AB': 4.5,
             },
             {
                 'year': '2021',
-                'points': 20.8,
-                'assists': 4.9,
-                'rebounds': 4.2,
+                'OPS': 20.8,
+                'K': 4.9,
+                'AB': 4.2,
             },
         ]
 

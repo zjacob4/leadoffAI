@@ -38,18 +38,18 @@
           <thead>
             <tr>
               <th class="text-left">Year</th>
-              <th class="text-right">Points</th>
-              <th class="text-right">Assists</th>
-              <th class="text-right">Rebounds</th>
+              <th class="text-right">OPS</th>
+              <th class="text-right">K</th>
+              <th class="text-right">AB</th>
             </tr>
           </thead>
           <tbody>
             {% for stat in historical_stats %}
             <tr>
               <td>{{ stat.year }}</td>
-              <td class="text-right">{{ stat.points|floatformat:1 }}</td>
-              <td class="text-right">{{ stat.assists|floatformat:1 }}</td>
-              <td class="text-right">{{ stat.rebounds|floatformat:1 }}</td>
+              <td class="text-right">{{ stat.OPS|floatformat:1 }}</td>
+              <td class="text-right">{{ stat.K|floatformat:1 }}</td>
+              <td class="text-right">{{ stat.AB|floatformat:1 }}</td>
             </tr>
             {% endfor %}
           </tbody>

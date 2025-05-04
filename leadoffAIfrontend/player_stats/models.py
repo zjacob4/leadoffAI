@@ -20,19 +20,17 @@ class PredictedStats(models.Model):
 
     def as_dict(self):
         return {
-            'points': self.points,
-            'assists': self.assists,
-            'rebounds': self.rebounds,
-            'steals': self.steals,
-            'blocks': self.blocks
+            'OPS': self.points,
+            'K': self.assists,
+            'AB': self.rebounds
         }
 
 class HistoricalStats(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='historical_stats')
     year = models.CharField(max_length=4)
-    points = models.FloatField(default=0)
-    assists = models.FloatField(default=0)
-    rebounds = models.FloatField(default=0)
+    OPS = models.FloatField(default=0)
+    K = models.FloatField(default=0)
+    AB = models.FloatField(default=0)
 
     class Meta:
         ordering = ['-year']
