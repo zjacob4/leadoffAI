@@ -64,38 +64,36 @@ def check_and_insert_players(players):
             print(f"Player {player_name} (ID: {player_id}) already exists in the historical stats table.")
         else:
             
-            
             # Fetch player stats from the API
-            for player in players:
-                try:
-                    player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people'] if x['fullName'] == player)
-                    stats_dict = {'player': player}
-                    for season in range(2020, 2024):
-                        stats_dict['season'] = season
-                        season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season={season}&group=hitting"
-                        response = requests.get(season_stats_url)
-                        if response.status_code == 200:
-                            season_stats = response.json()
-                            if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
-                                for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
-                                    column_name = f'{season} {stat}'
-                                    stats_dict[column_name] = value
-                        
-                        # Insert the player into the historical stats table
-                        strike_outs = stats_dict.get(f"{season} strikeOuts", None)
-                        ops = stats_dict.get(f"{season} ops", None)
-                        at_bats = stats_dict.get(f"{season} atBats", None)
-                        cursor.execute(
-                            f"INSERT INTO player_stats_historicalstats (player_id, year, OPS, K, AB) VALUES (?, ?, ?, ?, ?)",
-                            (player_id, season, ops, strike_outs, at_bats),  # Replace with actual stats
-                        )
-                        print(f"Inserted player {player_name} (ID: {player_id}, season: {season}) into the historical stats table.")
-                        
+            try:
+                player_api_id = next(x['id'] for x in statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people'] if x['fullName'] == player)
+                stats_dict = {'player': player}
+                for season in range(2020, 2024):
+                    stats_dict['season'] = season
+                    season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_api_id}/stats?stats=season&season={season}&group=hitting"
+                    response = requests.get(season_stats_url)
+                    if response.status_code == 200:
+                        season_stats = response.json()
+                        if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
+                            for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
+                                column_name = f'{season} {stat}'
+                                stats_dict[column_name] = value
+                    
+                    # Insert the player into the historical stats table
+                    strike_outs = stats_dict.get(f"{season} strikeOuts", None)
+                    ops = stats_dict.get(f"{season} ops", None)
+                    at_bats = stats_dict.get(f"{season} atBats", None)
+                    cursor.execute(
+                        f"INSERT INTO player_stats_historicalstats (player_id, year, OPS, K, AB) VALUES (?, ?, ?, ?, ?)",
+                        (player_id, season, ops, strike_outs, at_bats),  # Replace with actual stats
+                    )
+                    print(f"Inserted player {player_name} (ID: {player_id}, season: {season}) into the historical stats table.")
+                    
 
-                except StopIteration:
-                    print(f"Player {player} not found in the 2022 season.")
-                except Exception as e:
-                    print(f"Error retrieving stats for {player}: {e}")
+            except StopIteration:
+                print(f"Player {player} not found in the 2022 season.")
+            except Exception as e:
+                print(f"Error retrieving stats for {player}: {e}")
             
             
                 

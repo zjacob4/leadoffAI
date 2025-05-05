@@ -42,11 +42,13 @@ def player_stats_explorer(request):
                 # Get historical stats
                 # Convert player name to numeric ID
                 # Use a hash function to generate a numeric representation
-                hash_object = hashlib.md5(player.encode())  # MD5 hash
+                hash_object = hashlib.md5(player.name.encode())  # MD5 hash
                 hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
                 player_id = hash_value % 1e6  # Reduce the size of the number to avoid overflow
+                #player_id = hash_value % 1_000_000  # Use an integer divisor
 
-                player_historical_stats = player_id.historical_stats.all()
+                #player_historical_stats = player_id.historical_stats.all()
+                player_historical_stats = player.historical_stats.all()
                 print("Player historical stats:", player_historical_stats)
 
                 if player_historical_stats:
