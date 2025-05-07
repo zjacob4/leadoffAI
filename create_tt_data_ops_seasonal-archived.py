@@ -4,7 +4,6 @@ import requests
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import hashlib
-import numpy as np
 
 # Load the dataset
 file_path = 'statload_test.csv'
@@ -25,30 +24,18 @@ def get_player_training_data_ops():
     for player in players:
         try:
             counter += 1
-            # Create a 24 row by 33 column DataFrame with all zeros
-            player_df = pd.DataFrame(np.zeros((24, 33)))
-            player_df.columns = ['season','gamesPlayed','groundOuts','airOuts','runs','doubles','triples','homeRuns','strikeOuts','baseOnBalls','intentionalWalks','hits','hitByPitch','avg','atBats','obp','slg','ops','caughtStealing','stolenBases','stolenBasePercentage','groundIntoDoublePlay','numberOfPitches','plateAppearances','totalBases','rbi','leftOnBase','sacBunts','sacFlies','babip','groundOutsToAirouts','catchersInterference','atBatsPerHomeRun']
-
             player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': 2022, 'gameType': 'W'})['people'] if x['fullName'] == player)
             stats_dict = {'player': player}
             for season in range(2000, 2024):
-                player_df.loc[season-2000, 'season'] = season
+                stats_dict['season'] = season
                 season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season={season}&group=hitting"
                 response = requests.get(season_stats_url)
                 if response.status_code == 200:
                     season_stats = response.json()
                     if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
                         for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
-                            player_df.loc[season-2000, stat] = value
-                    else:
-                        print(f"No stats found for player {player} in season {season}.")
-                        # Fill in usual stats with 0 for missing data
-                        usual_stats = ['gamesPlayed','groundOuts','airOuts','runs','doubles','triples','homeRuns','strikeOuts','baseOnBalls','intentionalWalks','hits','hitByPitch','avg','atBats','obp','slg','ops','caughtStealing','stolenBases','stolenBasePercentage','groundIntoDoublePlay','numberOfPitches','plateAppearances','totalBases','rbi','leftOnBase','sacBunts','sacFlies','babip','groundOutsToAirouts','catchersInterference','atBatsPerHomeRun']
-                        for stat in usual_stats:
-                            player_df.loc[season-2000, 'season'] = season
-                            player_df.loc[season-2000, stat] = 0
-
-            print("Player_df: ", player_df)
+                            column_name = f'{season} {stat}'
+                            stats_dict[column_name] = value
 
             # Get 2024 OPS for player, expected value
             season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season=2024&group=hitting"

@@ -7,13 +7,10 @@ class Player(models.Model):
         return self.name
 
 class PredictedStats(models.Model):
-    player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name='predicted_stats')
-    points = models.FloatField(default=0)
-    assists = models.FloatField(default=0)
-    rebounds = models.FloatField(default=0)
-    steals = models.FloatField(default=0)
-    blocks = models.FloatField(default=0)
-    year = models.CharField(max_length=4, default="2024")
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='predicted_stats')
+    OPS = models.FloatField(default=0)
+    K = models.FloatField(default=0)
+    AB = models.FloatField(default=0)
 
     def __str__(self):
         return f"{self.player.name}'s Predicted Stats for {self.year}"
