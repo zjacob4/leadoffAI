@@ -8,7 +8,7 @@ import numpy as np
 
 # Load the dataset
 file_path = 'statload_test.csv'
-num_players = 10
+num_players = 1000
 start_year = 2020
 end_year = 2023
 
@@ -27,7 +27,7 @@ def get_player_training_data_ops():
     counter = -1
 
     # Create a num_player row by 33 column DataFrame with all zeros
-    player_df = pd.DataFrame(np.zeros((num_players, ((32*(end_year-start_year))+1))))
+    #player_df = pd.DataFrame(np.zeros((num_players, ((32*(end_year-start_year))+1))))
     
     player_df_col = []
     player_df_stats = ['gamesPlayed','groundOuts','airOuts','runs','doubles','triples','homeRuns','strikeOuts','baseOnBalls','intentionalWalks','hits','hitByPitch','avg','atBats','obp','slg','ops','caughtStealing','stolenBases','stolenBasePercentage','groundIntoDoublePlay','numberOfPitches','plateAppearances','totalBases','rbi','leftOnBase','sacBunts','sacFlies','babip','groundOutsToAirouts','catchersInterference','atBatsPerHomeRun']
@@ -41,6 +41,9 @@ def get_player_training_data_ops():
     # Add column for y value, since training
     player_df_col.append(f"{end_year} OPS")
 
+    # Create an empty DataFrame with the correct columns
+    player_df = pd.DataFrame(columns=player_df_col)
+
     # Assign the column names to the DataFrame
     player_df.columns = player_df_col
             
@@ -48,7 +51,11 @@ def get_player_training_data_ops():
     for player in players:
         try:
             counter += 1
-            player_df['player'] = player
+
+            # Add a new row for the current player
+            player_df = pd.concat([player_df, pd.DataFrame([{col: 0 for col in player_df.columns}])], ignore_index=True)
+            player_df.loc[player_df.index[-1], 'player'] = player
+            
             player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people'] if x['fullName'] == player)
             #stats_dict = {'player': player}
 
@@ -61,21 +68,15 @@ def get_player_training_data_ops():
                     if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
                         for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
                             current_stat = f"{season} {stat}"
-                            print("Current stat: ", current_stat)
                             try:
                                 # Attempt to cast the value to float
-                                #player_df.loc[counter, current_stat] = float(value)
                                 player_df.loc[player_df['player'] == player, current_stat] = float(value)
                             except ValueError:
                                 # If casting fails, assign NaN or handle the value appropriately
-                                #player_df.loc[counter, current_stat] = float('nan')
                                 player_df.loc[player_df['player'] == player, current_stat] = float('nan')
                     else:
-                        print(f"No stats found for player {player} in season {season}.")            
+                        #print(f"No stats found for player {player} in season {season}.")            
                         player_df.loc[player_df['player'] == player, player_df_col] = 0
-
-            print("Player_df: ", player_df)
-            print("Column names for player_df:", player_df.columns.tolist())
 
             # Get 2024 OPS for player, expected value
             season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season=2024&group=hitting"
@@ -88,12 +89,10 @@ def get_player_training_data_ops():
             if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
                 ops = season_stats['stats'][0]['splits'][0]['stat'].get('ops', 0)
                 player_df.loc[player_df['player'] == player,f"{end_year} OPS"] = ops
-                print("OPS: ", ops)
             else:
                 player_df.loc[player_df['player'] == player,f"{end_year} OPS"] = 0
-                print("OPS: ", 0)
 
-            print("Player ", counter, " out of ", num_players, " : ", player)
+            print("Player ", counter+1, " out of ", num_players, " : ", player)
 
             #df = pd.concat([df, pd.DataFrame([stats_dict])], ignore_index=True)
         except StopIteration:
@@ -102,11 +101,11 @@ def get_player_training_data_ops():
             print(f"Error retrieving stats for {player}: {e}")
 
 
-    print(player_df.head())
-
     # Fix unsupported types
     player_df.fillna(0, inplace=True)
     player_df.replace(['---', '-.--','.---'], 0, inplace=True)
+
+    print("Player df head: ", player_df.head())
 
     # Convert 'player' column into a numeric representation using hashing
     def convert_player_to_numeric(player_name):
@@ -115,7 +114,7 @@ def get_player_training_data_ops():
         hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
         return hash_value % 1e6  # Reduce the size of the number to avoid overflow
 
-
+    player_df['player'] = player_df['player'].astype(str)  # Ensure player names are strings
     player_df['player_numeric'] = player_df['player'].apply(convert_player_to_numeric).astype('float32')
 
     # Drop the original 'player' column
