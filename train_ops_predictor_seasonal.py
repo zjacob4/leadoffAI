@@ -49,9 +49,9 @@ def train_and_evaluate(X_train, X_test, y_train, y_test):
 
 if __name__ == "__main__":
     # Replace with actual file paths
-    X_train = load_data('X_train.csv')
-    X_test = load_data('X_test.csv')
-    y_train = load_data('y_train.csv')
-    y_test = load_data('y_test.csv')
+    X_train = load_data('X_train_seasonal.csv')
+    X_test = load_data('X_test_seasonal.csv')
+    y_train = load_data('y_train_seasonal.csv')
+    y_test = load_data('y_test_seasonal.csv')
     
     trained_model = train_and_evaluate(X_train, X_test, y_train, y_test)
