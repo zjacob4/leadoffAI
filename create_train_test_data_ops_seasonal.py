@@ -9,7 +9,7 @@ import numpy as np
 # Load the dataset
 file_path = 'statload_test.csv'
 num_players = 1000
-start_year = 2020
+start_year = 2013
 end_year = 2023
 
 
