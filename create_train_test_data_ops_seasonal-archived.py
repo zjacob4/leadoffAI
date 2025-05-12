@@ -8,8 +8,8 @@ import numpy as np
 
 # Load the dataset
 file_path = 'statload_test.csv'
-num_players = 1000
-start_year = 2018
+num_players = 10
+start_year = 2013
 end_year = 2023
 
 
@@ -17,7 +17,7 @@ def get_player_training_data_ops():
     players = []
     try:
         all_players = statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people']
-        players = [player['fullName'] for player in all_players[:]]
+        players = [player['fullName'] for player in all_players[:num_players]]
     except Exception as e:
         print(f"Error retrieving player list: {e}")
 
@@ -49,32 +49,18 @@ def get_player_training_data_ops():
             
 
     for player in players:
-        if counter >= num_players:
-            break
         try:
             counter += 1
 
-            player_str = player
-
-            # Convert 'player' column into a numeric representation using hashing
-            def convert_player_to_numeric(player_name):
-                # Use a hash function to generate a numeric representation
-                hash_object = hashlib.md5(player_name.encode())  # MD5 hash
-                hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
-                return hash_value % 1e6  # Reduce the size of the number to avoid overflow
-            
-            player = convert_player_to_numeric(player)
-
-            if player not in player_df['player'].values:
-                # Add a new row with all columns initialized to 0
-                new_row = {col: 0 for col in player_df.columns}
-                new_row['player'] = player  # Set the player's name
-                player_df = pd.concat([player_df, pd.DataFrame([new_row])], ignore_index=True)
+            # Add a new row for the current player
+            player_df = pd.concat([player_df, pd.DataFrame([{col: 0 for col in player_df.columns}])], ignore_index=True)
+            player_df.loc[player_df.index[-1], 'player'] = player
             
             try:
-                player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people'] if x['fullName'] == player_str)
+                player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people'] if x['fullName'] == player)
+                print(f"Player ID found for {player}")
             except StopIteration:
-                print(f"Player ID not found for {player_str}. Skipping.")
+                print(f"Player ID not found for {player}. Skipping.")
                 continue
 
             for season in range(start_year, end_year+1):
@@ -94,15 +80,7 @@ def get_player_training_data_ops():
                                 player_df.loc[player_df['player'] == player, current_stat] = float('nan')
                     else:
                         #print(f"No stats found for player {player} in season {season}.")            
-                        if player in player_df['player'].values:
-                            player_df.loc[player_df['player'] == player, player_df.columns.difference(['player'])] = 0
-
-            # Check if all values for the current player's row are 0
-            if (player_df.loc[player_df['player'] == player, :].drop(columns=['player']).eq(0).all(axis=None)):
-                print(f"Dropping player {player_str} due to all zero values.")
-                player_df.drop(player_df[player_df['player'] == player].index, inplace=True)
-                counter -= 1
-                continue
+                        player_df.loc[player_df['player'] == player, player_df_col] = 0
 
             # Get 2024 OPS for player, expected value
             season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season=2024&group=hitting"
@@ -111,23 +89,20 @@ def get_player_training_data_ops():
                 season_stats = response.json()
             else:
                 season_stats = {}
-                print(f"Failed to retrieve season stats for {player_str}. HTTP Status Code: {response.status_code}")
+                print(f"Failed to retrieve season stats for {player}. HTTP Status Code: {response.status_code}")
             if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
                 ops = season_stats['stats'][0]['splits'][0]['stat'].get('ops', 0)
                 player_df.loc[player_df['player'] == player,f"{end_year} OPS"] = ops
             else:
-                print(f"Dropping player {player_str} due to missing OPS stats.")
-                player_df = player_df[player_df['player'] != player]
-                counter -= 1
-                continue
+                player_df.loc[player_df['player'] == player,f"{end_year} OPS"] = 0
 
-            print("Player ", counter+1, " out of ", num_players, " : ", player_str)
+            print("Player ", counter+1, " out of ", num_players, " : ", player)
 
             #df = pd.concat([df, pd.DataFrame([stats_dict])], ignore_index=True)
         except StopIteration:
-            print(f"Player {player_str} not found in the {end_year} season.")
+            print(f"Player {player} not found in the {end_year} season.")
         except Exception as e:
-            print(f"Error retrieving stats for {player_str}: {e}")
+            print(f"Error retrieving stats for {player}: {e}")
 
 
     # Fix unsupported types
@@ -135,6 +110,19 @@ def get_player_training_data_ops():
     player_df.replace(['---', '-.--','.---'], 0, inplace=True)
 
     print("Player df head: ", player_df.head())
+
+    # Convert 'player' column into a numeric representation using hashing
+    def convert_player_to_numeric(player_name):
+        # Use a hash function to generate a numeric representation
+        hash_object = hashlib.md5(player_name.encode())  # MD5 hash
+        hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
+        return hash_value % 1e6  # Reduce the size of the number to avoid overflow
+
+    player_df['player'] = player_df['player'].astype(str)  # Ensure player names are strings
+    player_df['player_numeric'] = player_df['player'].apply(convert_player_to_numeric).astype('float32')
+
+    # Drop the original 'player' column
+    player_df.drop(columns=['player'], inplace=True)
 
     player_df.to_csv('/Users/zach/Projects/leadoffAI/statload_test_seasonal.csv', index=False)
     return player_df

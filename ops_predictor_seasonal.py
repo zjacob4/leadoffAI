@@ -8,7 +8,7 @@ import numpy as np
 
 # LOAD PREDICTED OPS
 
-start_year = 2013
+start_year = 2018
 end_year = 2023
 
 def predict_ops(player, model_path):
@@ -81,8 +81,6 @@ def predict_ops(player, model_path):
     player_df.fillna(0, inplace=True)
     player_df.replace(['---', '-.--','.---'], 0, inplace=True)
 
-    print("Player df head: ", player_df.head())
-
     # Convert 'player' column into a numeric representation using hashing
     def convert_player_to_numeric(player_name):
         # Use a hash function to generate a numeric representation
@@ -98,8 +96,7 @@ def predict_ops(player, model_path):
 
     model_input = player_df
     
-    #print model input
-    print(f"Model input: {model_input}")
+    model_input.to_csv('model_input.csv', index=False)
 
     # Load the pre-trained model
     player_ops_model = load_model(model_path)
