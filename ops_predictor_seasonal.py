@@ -13,18 +13,8 @@ end_year = 2023
 
 def predict_ops(player, model_path):
 
-    data = {}
-    df = pd.DataFrame(data)
-    player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year, 'gameType': 'W'})['people'] if x['fullName'] == player)
+    player_str = player
 
-    data = {}
-
-    df = pd.DataFrame(data)
-    counter = -1
-
-    # Create a num_player row by 33 column DataFrame with all zeros
-    #player_df = pd.DataFrame(np.zeros((num_players, ((32*(end_year-start_year))+1))))
-    
     player_df_col = []
     player_df_stats = ['gamesPlayed','groundOuts','airOuts','runs','doubles','triples','homeRuns','strikeOuts','baseOnBalls','intentionalWalks','hits','hitByPitch','avg','atBats','obp','slg','ops','caughtStealing','stolenBases','stolenBasePercentage','groundIntoDoublePlay','numberOfPitches','plateAppearances','totalBases','rbi','leftOnBase','sacBunts','sacFlies','babip','groundOutsToAirouts','catchersInterference','atBatsPerHomeRun']
 
@@ -39,47 +29,6 @@ def predict_ops(player, model_path):
 
     # Assign the column names to the DataFrame
     player_df.columns = player_df_col
-            
-
-    try:
-        counter += 1
-
-        # Add a new row for the current player
-        player_df = pd.concat([player_df, pd.DataFrame([{col: 0 for col in player_df.columns}])], ignore_index=True)
-        player_df.loc[player_df.index[-1], 'player'] = player
-        
-        player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people'] if x['fullName'] == player)
-        #stats_dict = {'player': player}
-
-        for season in range(start_year, end_year+1):
-            #player_df.loc[counter, 'season'] = season
-            season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season={season}&group=hitting"
-            response = requests.get(season_stats_url)
-            if response.status_code == 200:
-                season_stats = response.json()
-                if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
-                    for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
-                        current_stat = f"{season} {stat}"
-                        try:
-                            # Attempt to cast the value to float
-                            player_df.loc[player_df['player'] == player, current_stat] = float(value)
-                        except ValueError:
-                            # If casting fails, assign NaN or handle the value appropriately
-                            player_df.loc[player_df['player'] == player, current_stat] = float('nan')
-                else:
-                    #print(f"No stats found for player {player} in season {season}.")            
-                    player_df.loc[player_df['player'] == player, player_df_col] = 0
-
-        #df = pd.concat([df, pd.DataFrame([stats_dict])], ignore_index=True)
-    except StopIteration:
-        print(f"Player {player} not found in the {end_year} season.")
-    except Exception as e:
-        print(f"Error retrieving stats for {player}: {e}")
-
-
-    # Fix unsupported types
-    player_df.fillna(0, inplace=True)
-    player_df.replace(['---', '-.--','.---'], 0, inplace=True)
 
     # Convert 'player' column into a numeric representation using hashing
     def convert_player_to_numeric(player_name):
@@ -87,12 +36,52 @@ def predict_ops(player, model_path):
         hash_object = hashlib.md5(player_name.encode())  # MD5 hash
         hash_value = int(hash_object.hexdigest(), 16)  # Convert hash to an integer
         return hash_value % 1e6  # Reduce the size of the number to avoid overflow
+    
+    player = convert_player_to_numeric(player)
 
-    player_df['player'] = player_df['player'].astype(str)  # Ensure player names are strings
-    player_df['player_numeric'] = player_df['player'].apply(convert_player_to_numeric).astype('float32')
+    # Add a new row with all columns initialized to 0
+    new_row = {col: 0 for col in player_df.columns}
+    new_row['player'] = player  # Set the player's name
+    player_df = pd.concat([player_df, pd.DataFrame([new_row])], ignore_index=True)
+    
+    try:
+        player_id = next(x['id'] for x in statsapi.get('sports_players', {'season': end_year+1, 'gameType': 'W'})['people'] if x['fullName'] == player_str)
+    except StopIteration:
+        print(f"Player ID not found for {player_str}. Skipping.")
 
-    # Drop the original 'player' column
-    player_df.drop(columns=['player'], inplace=True)
+    for season in range(start_year, end_year+1):
+        #player_df.loc[counter, 'season'] = season
+        season_stats_url = f"https://statsapi.mlb.com/api/v1/people/{player_id}/stats?stats=season&season={season}&group=hitting"
+        response = requests.get(season_stats_url)
+        if response.status_code == 200:
+            season_stats = response.json()
+            if season_stats and 'stats' in season_stats and len(season_stats['stats']) > 0:
+                for stat, value in season_stats['stats'][0]['splits'][0]['stat'].items():
+                    current_stat = f"{season} {stat}"
+                    try:
+                        # Attempt to cast the value to float
+                        player_df.loc[player_df['player'] == player, current_stat] = float(value)
+                    except ValueError:
+                        # If casting fails, assign NaN or handle the value appropriately
+                        player_df.loc[player_df['player'] == player, current_stat] = float('nan')
+            else:
+                #print(f"No stats found for player {player} in season {season}.")            
+                if player in player_df['player'].values:
+                    player_df.loc[player_df['player'] == player, player_df.columns.difference(['player'])] = 0
+                    
+    # Check if all values for the current player's row are 0
+    if (player_df.loc[player_df['player'] == player, :].drop(columns=['player']).eq(0).all(axis=None)):
+        print(f"Dropping player {player_str} due to all zero values.")
+        player_df.drop(player_df[player_df['player'] == player].index, inplace=True)
+        counter -= 1
+        raise ValueError(f"No stats exist for player {player_str} in season {season}. Terminating program.")
+
+
+    # Fix unsupported types
+    player_df.fillna(0, inplace=True)
+    player_df.replace(['---', '-.--','.---'], 0, inplace=True)
+
+    print("Player df head: ", player_df.head())
 
     model_input = player_df
     
@@ -125,7 +114,7 @@ def predict_ops(player, model_path):
 
 if __name__ == "__main__":
     # Example usage
-    player = "Mike Trout"
+    player = "Jazz Chisholm Jr."
     model_path = 'player_ops_model_seasonal.h5'
     predicted_ops = predict_ops(player, model_path)
     print(f"Predicted OPS for {player}: {predicted_ops}")
